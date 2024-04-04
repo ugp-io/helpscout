@@ -6,9 +6,10 @@ var customersURL string = "https://api.helpscout.net/v2/customers"
 var tagsURL string = "https://api.helpscout.net/v2/tags"
 
 type HelpScoutConversationRequest struct {
-	URL    *string
-	Emails *[]string
-	Status *string
+	URL       *string
+	Emails    *[]string
+	Mailboxes *[]string
+	Status    *string
 }
 
 type HelpScoutTagUpdate struct {

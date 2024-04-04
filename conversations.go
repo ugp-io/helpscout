@@ -34,6 +34,10 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 		if req.Status != nil {
 			buildURL += "&status=" + *req.Status
 		}
+		if req.Mailboxes != nil {
+			mailboxJoin := strings.Join(*req.Mailboxes, ",")
+			buildURL += "&mailbox=" + mailboxJoin
+		}
 		fullURL = fmt.Sprintf("%s?%v", conversationsURL, buildURL)
 	} else {
 
@@ -50,11 +54,13 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 		encodedQuery := url.Values{}
 		encodedQuery.Set("query", queryParams.Get("query"))
 		encodedQuery.Set("page", queryParams.Get("page"))
+		encodedQuery.Set("mailbox", queryParams.Get("mailbox"))
 
 		parsedURL.RawQuery = encodedQuery.Encode()
 		fullURL = parsedURL.String()
 	}
 
+	fmt.Println(fullURL)
 	client := &http.Client{}
 	reqhttp, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
