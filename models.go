@@ -1,9 +1,20 @@
 package helpscout
 
-var refreshCode string = "S9IvIMTJzqdaaUJCKkfjN1lxAZkk0Cut"
 var accessCode string
 var conversationsURL string = "https://api.helpscout.net/v2/conversations"
 var customersURL string = "https://api.helpscout.net/v2/customers"
+var tagsURL string = "https://api.helpscout.net/v2/tags"
+
+type HelpScoutConversationRequest struct {
+	URL    *string
+	Emails *[]string
+	Status *string
+}
+
+type HelpScoutTagUpdate struct {
+	ConversationID string
+	Tags           []string
+}
 
 type HelpScoutConversationsResponse struct {
 	Embedded struct {
@@ -75,13 +86,13 @@ type HelpScoutConversationsResponse struct {
 				Type *string `json:"type,omitempty"`
 				Via  *string `json:"via,omitempty"`
 			} `json:"source,omitempty"`
-			State         *string        `json:"state,omitempty"`
-			Status        *string        `json:"status,omitempty"`
-			Subject       *string        `json:"subject,omitempty"`
-			Tags          *[]interface{} `json:"tags,omitempty"`
-			Threads       *int           `json:"threads,omitempty"`
-			Type          *string        `json:"type,omitempty"`
-			UserUpdatedAt *string        `json:"userUpdatedAt,omitempty"`
+			State         *string                   `json:"state,omitempty"`
+			Status        *string                   `json:"status,omitempty"`
+			Subject       *string                   `json:"subject,omitempty"`
+			Tags          *[]map[string]interface{} `json:"tags,omitempty"`
+			Threads       *int                      `json:"threads,omitempty"`
+			Type          *string                   `json:"type,omitempty"`
+			UserUpdatedAt *string                   `json:"userUpdatedAt,omitempty"`
 		} `json:"conversations,omitempty"`
 	} `json:"_embedded,omitempty"`
 	Links struct {
@@ -108,58 +119,6 @@ type HelpScoutConversationsResponse struct {
 		TotalElements *int `json:"totalElements,omitempty"`
 		TotalPages    *int `json:"totalPages,omitempty"`
 	} `json:"page,omitempty"`
-}
-
-type HelpScoutCustomerResponse struct {
-	Embedded struct {
-		Customers []struct {
-			ID         *int    `json:"id,omitempty"`
-			FirstName  *string `json:"firstName,omitempty"`
-			LastName   *string `json:"lastName,omitempty"`
-			Gender     *string `json:"gender,omitempty"`
-			PhotoType  *string `json:"photoType,omitempty"`
-			PhotoURL   *string `json:"photoUrl,omitempty"`
-			CreatedAt  *string `json:"createdAt,omitempty"`
-			UpdatedAt  *string `json:"updatedAt,omitempty"`
-			Background *string `json:"background,omitempty"`
-			Draft      *bool   `json:"draft,omitempty"`
-			Embedded   struct {
-				Emails []struct {
-					ID    *int    `json:"id,omitempty"`
-					Value *string `json:"value,omitempty"`
-					Type  *string `json:"type,omitempty"`
-				} `json:"emails,omitempty"`
-				Phones         []interface{} `json:"phones,omitempty"`
-				Chats          []interface{} `json:"chats,omitempty"`
-				SocialProfiles []interface{} `json:"social_profiles,omitempty"`
-				Websites       []interface{} `json:"websites,omitempty"`
-				Properties     []interface{} `json:"properties,omitempty"`
-			} `json:"_embedded,omitempty"`
-			Links struct {
-				Address struct {
-					Href *string `json:"href,omitempty"`
-				} `json:"address,omitempty"`
-				Chats struct {
-					Href *string `json:"href,omitempty"`
-				} `json:"chats,omitempty"`
-				Emails struct {
-					Href *string `json:"href,omitempty"`
-				} `json:"emails,omitempty"`
-				Phones struct {
-					Href *string `json:"href,omitempty"`
-				} `json:"phones,omitempty"`
-				SocialProfiles struct {
-					Href *string `json:"href,omitempty"`
-				} `json:"social-profiles,omitempty"`
-				Websites struct {
-					Href *string `json:"href,omitempty"`
-				} `json:"websites,omitempty"`
-				Self struct {
-					Href *string `json:"href,omitempty"`
-				} `json:"self,omitempty"`
-			} `json:"_links,omitempty"`
-		} `json:"customers,omitempty"`
-	} `json:"_embedded,omitempty"`
 }
 
 type HelpScoutThreadsResponse struct {
@@ -243,7 +202,37 @@ type HelpScoutThreadsResponse struct {
 	} `json:"page,omitempty"`
 }
 
-type HelpScoutTagUpdate struct {
-	ConversationID string
-	Tags           map[string]string
+type HelpScoutTagsResponse struct {
+	Embedded struct {
+		Tags []struct {
+			Color       *string `json:"color,omitempty"`
+			CreatedAt   *string `json:"createdAt,omitempty"`
+			ID          *int    `json:"id,omitempty"`
+			Name        *string `json:"name,omitempty"`
+			Slug        *string `json:"slug,omitempty"`
+			TicketCount *int    `json:"ticketCount,omitempty"`
+			UpdatedAt   *string `json:"updatedAt,omitempty"`
+		} `json:"tags,omitempty"`
+	} `json:"_embedded,omitempty"`
+	Links struct {
+		First struct {
+			Href *string `json:"href,omitempty"`
+		} `json:"first,omitempty"`
+		Last struct {
+			Href *string `json:"href,omitempty"`
+		} `json:"last,omitempty"`
+		Page struct {
+			Href      *string `json:"href,omitempty"`
+			Templated *bool   `json:"templated,omitempty"`
+		} `json:"page,omitempty"`
+		Self struct {
+			Href *string `json:"href,omitempty"`
+		} `json:"self,omitempty"`
+	} `json:"_links,omitempty"`
+	Page struct {
+		Number        *int `json:"number,omitempty"`
+		Size          *int `json:"size,omitempty"`
+		TotalElements *int `json:"totalElements,omitempty"`
+		TotalPages    *int `json:"totalPages,omitempty"`
+	} `json:"page,omitempty"`
 }

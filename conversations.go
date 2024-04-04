@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type ConversationsServiceOp struct {
@@ -14,18 +15,26 @@ type ConversationsServiceOp struct {
 }
 
 type ConversationsService interface {
-	BrowseConversations(context.Context, string) (*HelpScoutConversationsResponse, error)
+	BrowseConversations(context.Context, HelpScoutConversationRequest) (*HelpScoutConversationsResponse, error)
 	UpdateTag(context.Context, HelpScoutTagUpdate) error
 }
 
-func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, fullURL string) (*HelpScoutConversationsResponse, error) {
+func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req HelpScoutConversationRequest) (*HelpScoutConversationsResponse, error) {
 
 	// Build initial URL or use given URL
-	if fullURL == "" {
-		escapedEmail := url.QueryEscape(`(email:(notifications@brandmanager360.com OR system@brandcomply.com OR designs@affinity-gateway.com))`)
-		// escapedStatus := "status=all"
-		// fullURL = fmt.Sprintf("%s?query=%s&%s", conversationsURL, escapedEmail, escapedStatus)
-		fullURL = fmt.Sprintf("%s?query=%s", conversationsURL, escapedEmail)
+	var fullURL string
+	if req.URL == nil {
+
+		var buildURL string
+		if req.Emails != nil {
+			emailJoin := strings.Join(*req.Emails, " OR ")
+			buildURL = "query=" + url.QueryEscape(`(email:(`+emailJoin+`))`)
+		}
+
+		if req.Status != nil {
+			buildURL += "&status=" + *req.Status
+		}
+		fullURL = fmt.Sprintf("%s?%v", conversationsURL, buildURL)
 	} else {
 
 		parsedURL, err := url.Parse(fullURL)
@@ -40,7 +49,6 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, fullUR
 
 		encodedQuery := url.Values{}
 		encodedQuery.Set("query", queryParams.Get("query"))
-		// encodedQuery.Set("status", queryParams.Get("status"))
 		encodedQuery.Set("page", queryParams.Get("page"))
 
 		parsedURL.RawQuery = encodedQuery.Encode()
@@ -48,20 +56,19 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, fullUR
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fullURL, nil)
+	reqhttp, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", "Bearer "+accessCode)
+	reqhttp.Header.Add("Authorization", "Bearer "+accessCode)
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(reqhttp)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var response HelpScoutConversationsResponse
-	// var response interface{}
 	decoder := json.NewDecoder(resp.Body)
 	errDecode := decoder.Decode(&response)
 	if errDecode != nil {
@@ -70,7 +77,7 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, fullUR
 
 	if response.Links.Next.Href != nil && response.Page.Number != nil && *response.Page.Number < 2 {
 		newLink := *response.Links.Next.Href
-		newResponse, err := c.BrowseConversations(ctx, newLink)
+		newResponse, err := c.BrowseConversations(ctx, HelpScoutConversationRequest{URL: &newLink})
 		if err != nil {
 			return nil, err
 		}
@@ -84,17 +91,15 @@ func (c *ConversationsServiceOp) UpdateTag(ctx context.Context, update HelpScout
 
 	fullURL := fmt.Sprintf("%v/%v/tags", conversationsURL, update.ConversationID)
 
-	payload := update.Tags
+	payload := map[string]interface{}{"tags": update.Tags}
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println("Error marshalling payload:", err)
 		return err
 	}
 
 	client := &http.Client{}
 	req, err := http.NewRequest("PUT", fullURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	req.Header.Add("Authorization", "Bearer "+accessCode)
@@ -102,12 +107,10 @@ func (c *ConversationsServiceOp) UpdateTag(ctx context.Context, update HelpScout
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	defer resp.Body.Close()
 
-	// var response HelpScoutThreadsResponse
 	var response interface{}
 	decoder := json.NewDecoder(resp.Body)
 	errDecode := decoder.Decode(&response)
