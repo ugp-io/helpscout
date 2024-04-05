@@ -21,7 +21,6 @@ type ConversationsService interface {
 
 func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req HelpScoutConversationRequest) (*HelpScoutConversationsResponse, error) {
 
-	// Build initial URL or use given URL
 	var fullURL string
 	if req.URL == nil {
 
@@ -116,13 +115,6 @@ func (c *ConversationsServiceOp) UpdateTag(ctx context.Context, update HelpScout
 		return err
 	}
 	defer resp.Body.Close()
-
-	var response interface{}
-	decoder := json.NewDecoder(resp.Body)
-	errDecode := decoder.Decode(&response)
-	if errDecode != nil {
-		return errDecode
-	}
 
 	return nil
 }
