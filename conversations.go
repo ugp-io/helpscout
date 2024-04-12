@@ -37,17 +37,14 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 			mailboxJoin := strings.Join(*req.Mailboxes, ",")
 			buildURL += "&mailbox=" + mailboxJoin
 		}
-		if req.Folder != nil {
-			buildURL += "&folder=" + *req.Folder
-		}
-		if req.Tags != nil {
+		if req.Tags != nil && len(*req.Tags) > 0 {
 			tagJoin := strings.Join(*req.Tags, ",")
-			buildURL += "&tag=" + tagJoin
+			buildURL += "&tag=" + url.QueryEscape(tagJoin)
 		}
 		fullURL = fmt.Sprintf("%s?%v", conversationsURL, buildURL)
 	} else {
 
-		parsedURL, err := url.Parse(fullURL)
+		parsedURL, err := url.Parse(*req.URL)
 		if err != nil {
 			return nil, err
 		}
@@ -60,10 +57,17 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 		encodedQuery := url.Values{}
 		encodedQuery.Set("query", queryParams.Get("query"))
 		encodedQuery.Set("page", queryParams.Get("page"))
-		encodedQuery.Set("mailbox", queryParams.Get("mailbox"))
-		// encodedQuery.Set("status", queryParams.Get("status"))
-		// encodedQuery.Set("tag", queryParams.Get("tag"))
-		// encodedQuery.Set("folder", queryParams.Get("folder"))
+
+		if req.Mailboxes != nil {
+			encodedQuery.Set("mailbox", queryParams.Get("mailbox"))
+		}
+		if req.Status != nil {
+			encodedQuery.Set("status", queryParams.Get("status"))
+		}
+
+		if req.Tags != nil && len(*req.Tags) > 0 {
+			encodedQuery.Set("tag", queryParams.Get("tag"))
+		}
 
 		parsedURL.RawQuery = encodedQuery.Encode()
 		fullURL = parsedURL.String()
@@ -90,7 +94,7 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 		return nil, errDecode
 	}
 
-	if response.Links.Next.Href != nil && response.Page.Number != nil && *response.Page.Number < 2 {
+	if response.Links.Next.Href != nil {
 		newLink := *response.Links.Next.Href
 		newResponse, err := c.BrowseConversations(ctx, HelpScoutConversationRequest{URL: &newLink})
 		if err != nil {

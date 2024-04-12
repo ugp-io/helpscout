@@ -9,9 +9,8 @@ type HelpScoutConversationRequest struct {
 	URL       *string
 	Emails    *[]string
 	Mailboxes *[]string
-	Tags      *[]string
-	Folder    *string
 	Status    *string
+	Tags      *[]string
 }
 
 type HelpScoutTagUpdate struct {
