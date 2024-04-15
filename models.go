@@ -18,6 +18,12 @@ type HelpScoutTagUpdate struct {
 	Tags           []string
 }
 
+type HelpScoutConversationUpdate struct {
+	ConversationID string
+	Status         *string
+	MailboxID      *int
+}
+
 type HelpScoutConversationsResponse struct {
 	Embedded struct {
 		Conversations []struct {

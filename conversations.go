@@ -17,6 +17,7 @@ type ConversationsServiceOp struct {
 type ConversationsService interface {
 	BrowseConversations(context.Context, HelpScoutConversationRequest) (*HelpScoutConversationsResponse, error)
 	UpdateTag(context.Context, HelpScoutTagUpdate) error
+	UpdateConversation(context.Context, HelpScoutConversationUpdate) error
 }
 
 func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req HelpScoutConversationRequest) (*HelpScoutConversationsResponse, error) {
@@ -118,6 +119,48 @@ func (c *ConversationsServiceOp) UpdateTag(ctx context.Context, update HelpScout
 
 	client := &http.Client{}
 	req, err := http.NewRequest("PUT", fullURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", "Bearer "+accessCode)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+func (c *ConversationsServiceOp) UpdateConversation(ctx context.Context, update HelpScoutConversationUpdate) error {
+
+	var payload map[string]interface{}
+	fullURL := fmt.Sprintf("%v/%v", conversationsURL, update.ConversationID)
+
+	switch {
+	case update.Status != nil:
+		payload = map[string]interface{}{
+			"op":    "replace",
+			"path":  "/status",
+			"value": *update.Status,
+		}
+	case update.MailboxID != nil:
+		payload = map[string]interface{}{
+			"op":    "move",
+			"path":  "/mailboxId",
+			"value": *update.MailboxID,
+		}
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("PATCH", fullURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
