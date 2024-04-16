@@ -18,6 +18,12 @@ type HelpScoutTagUpdate struct {
 	Tags           []string
 }
 
+type HelpScoutConversationTag struct {
+	Color *string `json:"color,omitempty"`
+	ID    *int    `json:"id,omitempty"`
+	Tag   *string `json:"tag,omitempty"`
+}
+
 type HelpScoutConversationsResponse struct {
 	Embedded struct {
 		Conversations []struct {
@@ -88,13 +94,13 @@ type HelpScoutConversationsResponse struct {
 				Type *string `json:"type,omitempty"`
 				Via  *string `json:"via,omitempty"`
 			} `json:"source,omitempty"`
-			State         *string                   `json:"state,omitempty"`
-			Status        *string                   `json:"status,omitempty"`
-			Subject       *string                   `json:"subject,omitempty"`
-			Tags          *[]map[string]interface{} `json:"tags,omitempty"`
-			Threads       *int                      `json:"threads,omitempty"`
-			Type          *string                   `json:"type,omitempty"`
-			UserUpdatedAt *string                   `json:"userUpdatedAt,omitempty"`
+			State         *string                     `json:"state,omitempty"`
+			Status        *string                     `json:"status,omitempty"`
+			Subject       *string                     `json:"subject,omitempty"`
+			Tags          *[]HelpScoutConversationTag `json:"tags,omitempty"`
+			Threads       *int                        `json:"threads,omitempty"`
+			Type          *string                     `json:"type,omitempty"`
+			UserUpdatedAt *string                     `json:"userUpdatedAt,omitempty"`
 		} `json:"conversations,omitempty"`
 	} `json:"_embedded,omitempty"`
 	Links struct {

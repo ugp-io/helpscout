@@ -73,7 +73,6 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 		fullURL = parsedURL.String()
 	}
 
-	fmt.Println(fullURL)
 	client := &http.Client{}
 	reqhttp, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
