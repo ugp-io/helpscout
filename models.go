@@ -24,6 +24,12 @@ type HelpScoutConversationUpdate struct {
 	MailboxID      *int
 }
 
+type HelpScoutConversationTag struct {
+	Color *string `json:"color,omitempty"`
+	ID    *int    `json:"id,omitempty"`
+	Tag   *string `json:"tag,omitempty"`
+}
+
 type HelpScoutConversationsResponse struct {
 	Embedded struct {
 		Conversations []struct {
