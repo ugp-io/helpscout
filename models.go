@@ -30,6 +30,11 @@ type HelpScoutConversationTag struct {
 	Tag   *string `json:"tag,omitempty"`
 }
 
+type HelpScoutGetAttachmentRequest struct {
+	ConversationID int
+	AttachmentID   string
+}
+
 type HelpScoutConversationsResponse struct {
 	Embedded struct {
 		Conversations []struct {
@@ -139,7 +144,17 @@ type HelpScoutThreadsResponse struct {
 	Embedded struct {
 		Threads []struct {
 			Embedded struct {
-				Attachments []interface{} `json:"attachments,omitempty"`
+				Attachments []struct {
+					ID       *int    `json:"id,omitempty"`
+					Filename *string `json:"filename,omitempty"`
+					MimeType *string `json:"mimeType,omitempty"`
+					State    *string `json:"state,omitempty"`
+					Links    struct {
+						Self string `json:"self,omitempty"`
+						Data string `json:"data,omitempty"`
+						Href string `json:"href,omitempty"`
+					}
+				} `json:"attachments,omitempty"`
 			} `json:"_embedded,omitempty"`
 			Links struct {
 				AssignedTo struct {
@@ -249,4 +264,8 @@ type HelpScoutTagsResponse struct {
 		TotalElements *int `json:"totalElements,omitempty"`
 		TotalPages    *int `json:"totalPages,omitempty"`
 	} `json:"page,omitempty"`
+}
+
+type HelpScoutAttachmentResponse struct {
+	Attachment []byte
 }

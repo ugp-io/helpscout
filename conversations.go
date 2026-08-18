@@ -3,9 +3,9 @@ package helpscout
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 )
@@ -16,8 +16,9 @@ type ConversationsServiceOp struct {
 
 type ConversationsService interface {
 	BrowseConversations(context.Context, HelpScoutConversationRequest) (*HelpScoutConversationsResponse, error)
-	UpdateTag(context.Context, HelpScoutTagUpdate) error
+	UpdateConversationTag(context.Context, HelpScoutTagUpdate) error
 	UpdateConversation(context.Context, HelpScoutConversationUpdate) error
+	GetThreadAttachment(ctx context.Context, req HelpScoutGetAttachmentRequest) (*HelpScoutAttachmentResponse, error)
 }
 
 func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req HelpScoutConversationRequest) (*HelpScoutConversationsResponse, error) {
@@ -74,24 +75,9 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 		fullURL = parsedURL.String()
 	}
 
-	client := &http.Client{}
-	reqhttp, err := http.NewRequest("GET", fullURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	reqhttp.Header.Add("Authorization", "Bearer "+accessCode)
-
-	resp, err := client.Do(reqhttp)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var response HelpScoutConversationsResponse
-	decoder := json.NewDecoder(resp.Body)
-	errDecode := decoder.Decode(&response)
-	if errDecode != nil {
-		return nil, errDecode
+	if err := c.client.Request("GET", fullURL, nil, &response); err != nil {
+		return nil, err
 	}
 
 	if response.Links.Next.Href != nil {
@@ -106,38 +92,9 @@ func (c *ConversationsServiceOp) BrowseConversations(ctx context.Context, req He
 	return &response, nil
 }
 
-func (c *ConversationsServiceOp) UpdateTag(ctx context.Context, update HelpScoutTagUpdate) error {
-
-	fullURL := fmt.Sprintf("%v/%v/tags", conversationsURL, update.ConversationID)
-
-	payload := map[string]interface{}{"tags": update.Tags}
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest("PUT", fullURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Authorization", "Bearer "+accessCode)
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return nil
-}
-
 func (c *ConversationsServiceOp) UpdateConversation(ctx context.Context, update HelpScoutConversationUpdate) error {
 
 	var payload map[string]interface{}
-	fullURL := fmt.Sprintf("%v/%v", conversationsURL, update.ConversationID)
-
 	switch {
 	case update.Status != nil:
 		payload = map[string]interface{}{
@@ -152,25 +109,49 @@ func (c *ConversationsServiceOp) UpdateConversation(ctx context.Context, update 
 			"value": *update.MailboxID,
 		}
 	}
-
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("PATCH", fullURL, bytes.NewBuffer(jsonData))
+	return c.client.Request(
+		"PATCH",
+		fmt.Sprintf("%v/%v", conversationsURL, update.ConversationID),
+		bytes.NewBuffer(jsonData),
+		nil)
+}
+
+func (c *ConversationsServiceOp) GetThreadAttachment(ctx context.Context, req HelpScoutGetAttachmentRequest) (*HelpScoutAttachmentResponse, error) {
+
+	var resp string
+	err := c.client.Request(
+		"GET",
+		fmt.Sprintf("%s/%s/attachments/%s/file", conversationsURL, req.ConversationID, req.AttachmentID),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+
+	var response HelpScoutAttachmentResponse
+	response.Attachment, err = base64.StdEncoding.DecodeString(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *ConversationsServiceOp) UpdateConversationTag(ctx context.Context, update HelpScoutTagUpdate) error {
+
+	jsonData, err := json.Marshal(map[string]interface{}{"tags": update.Tags})
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", "Bearer "+accessCode)
-	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return nil
+	return c.client.Request(
+		"PUT",
+		fmt.Sprintf("%v/%v/tags", conversationsURL, update.ConversationID),
+		bytes.NewBuffer(jsonData),
+		nil)
 }

@@ -2,8 +2,6 @@ package helpscout
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
 )
 
 type TagsServiceOp struct {
@@ -16,24 +14,9 @@ type TagsService interface {
 
 func (c *TagsServiceOp) BrowseTags(ctx context.Context) (*HelpScoutTagsResponse, error) {
 
-	client := &http.Client{}
-	reqhttp, err := http.NewRequest("GET", tagsURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	reqhttp.Header.Add("Authorization", "Bearer "+accessCode)
-
-	resp, err := client.Do(reqhttp)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var response HelpScoutTagsResponse
-	decoder := json.NewDecoder(resp.Body)
-	errDecode := decoder.Decode(&response)
-	if errDecode != nil {
-		return nil, errDecode
+	if err := c.client.Request("GET", tagsURL, nil, &response); err != nil {
+		return nil, err
 	}
 
 	return &response, nil
