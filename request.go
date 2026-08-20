@@ -13,7 +13,7 @@ type Client struct {
 	APIKey      string
 	APISecret   string
 	AccessToken *string
-	ExpiresIn   *int
+	ExpiresIn   *float64
 
 	Conversations ConversationsService
 	Threads       ThreadsService
@@ -130,7 +130,7 @@ func (c *Client) GetAccessToken() error {
 
 	if accessToken, ok := tokenResp["access_token"].(string); ok {
 		fmt.Println(accessToken)
-		expiration := tokenResp["expires_in"].(int)
+		expiration := tokenResp["expires_in"].(float64)
 		c.ExpiresIn = &expiration
 		c.AccessToken = &accessToken
 	}
