@@ -1,10 +1,8 @@
 package helpscout
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -109,15 +107,10 @@ func (c *ConversationsServiceOp) UpdateConversation(ctx context.Context, update 
 			"value": *update.MailboxID,
 		}
 	}
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
 	return c.client.Request(
 		"PATCH",
 		fmt.Sprintf("%v/%v", conversationsURL, update.ConversationID),
-		bytes.NewBuffer(jsonData),
+		payload,
 		nil)
 }
 
@@ -144,14 +137,9 @@ func (c *ConversationsServiceOp) GetThreadAttachment(ctx context.Context, req He
 
 func (c *ConversationsServiceOp) UpdateConversationTag(ctx context.Context, update HelpScoutTagUpdate) error {
 
-	jsonData, err := json.Marshal(map[string]interface{}{"tags": update.Tags})
-	if err != nil {
-		return err
-	}
-
 	return c.client.Request(
 		"PUT",
 		fmt.Sprintf("%v/%v/tags", conversationsURL, update.ConversationID),
-		bytes.NewBuffer(jsonData),
+		map[string]interface{}{"tags": update.Tags},
 		nil)
 }
