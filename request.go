@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -74,13 +75,13 @@ func (c *Client) Request(method string, url string, body interface{}, v interfac
 
 	// fmt.Println("Resp:", string(respBody))
 	// fmt.Println(url)
-	decoder := json.NewDecoder(bytes.NewReader(respBody))
-	errDecode := decoder.Decode(&v)
-	if errDecode != nil {
-		return errDecode
+	contentType := resp.Header.Get("Content-Type")
+	if strings.Contains(contentType, "application/pdf") {
+		v = respBody
+		return nil
 	}
 
-	return nil
+	return json.NewDecoder(bytes.NewReader(respBody)).Decode(&v)
 }
 
 // func (c *Client) TokenAccess(ctx context.Context) error {

@@ -2,7 +2,6 @@ package helpscout
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"net/url"
 	"strings"
@@ -116,19 +115,15 @@ func (c *ConversationsServiceOp) UpdateConversation(ctx context.Context, update 
 
 func (c *ConversationsServiceOp) GetThreadAttachment(ctx context.Context, req HelpScoutGetAttachmentRequest) (*HelpScoutAttachmentResponse, error) {
 
-	var resp string
-	err := c.client.Request(
-		"GET",
-		fmt.Sprintf("%s/%s/attachments/%s/file", conversationsURL, req.ConversationID, req.AttachmentID),
-		nil,
-		&resp)
-	if err != nil {
-		return nil, err
-	}
-
 	var response HelpScoutAttachmentResponse
-	response.Attachment, err = base64.StdEncoding.DecodeString(resp)
+	fullURL := fmt.Sprintf("%v/%v/attachments/%v/file",
+		conversationsURL,
+		req.ConversationID,
+		req.AttachmentID)
+
+	err := c.client.Request("GET", fullURL, nil, &response.Attachment)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
